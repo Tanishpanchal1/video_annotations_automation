@@ -1,0 +1,22 @@
+# ── Automated Annotation System — Requirements ───────────
+# Install all dependencies with:
+#   pip install -r requirements.txt
+
+# ── Free LLM — Groq API (fast, free tier available) ──────
+# Used for: audio transcription + image understanding + annotation planning
+# Get free API key at: https://console.groq.com
+groq>=0.9.0,<1.0.0
+
+# ── Image & Video Processing ─────────────────────────────
+opencv-python==4.13.0.92
+Pillow==11.3.0
+numpy>=1.26.0
+
+# ── Audio Handling ────────────────────────────────────────
+pydub==0.25.1
+
+# ── Environment / Config ──────────────────────────────────
+python-dotenv==1.2.2
+
+# ── System Requirements (install separately) ─────────────
+# ffmpeg  →  winget install ffmpeg

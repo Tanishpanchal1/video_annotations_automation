@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Video Annotation Studio</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar: Asset Selection -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h1>Annotation Studio</h1>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>1. Select Question Image</h3>
+        <div class="asset-selector-card">
+          <select id="image-select" class="dropdown">
+            <option value="" disabled selected>Select from workspace...</option>
+          </select>
+          <div class="divider"><span>or</span></div>
+          <div class="file-drop-zone" id="image-drop">
+            <input type="file" id="image-file" accept="image/*" class="file-input">
+            <svg class="upload-icon" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <p>Upload/Drop Image</p>
+            <span class="file-name-label" id="uploaded-image-name">No file chosen</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>2. Select Narration Audio</h3>
+        <div class="asset-selector-card">
+          <select id="audio-select" class="dropdown">
+            <option value="" disabled selected>Select from workspace...</option>
+          </select>
+          <div class="divider"><span>or</span></div>
+          <div class="file-drop-zone" id="audio-drop">
+            <input type="file" id="audio-file" accept="audio/*" class="file-input">
+            <svg class="upload-icon" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            <p>Upload/Drop Audio</p>
+            <span class="file-name-label" id="uploaded-audio-name">No file chosen</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button id="run-btn" class="primary-btn disabled" disabled>
+          <span class="btn-text">Generate Video</span>
+          <div class="btn-glow"></div>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+      <!-- Top Selected Asset Preview Row -->
+      <header class="workspace-header">
+        <div class="header-asset">
+          <span class="label">IMAGE:</span>
+          <span id="selected-image-display" class="val">None Selected</span>
+        </div>
+        <div class="header-asset">
+          <span class="label">AUDIO:</span>
+          <span id="selected-audio-display" class="val">None Selected</span>
+        </div>
+      </header>
+
+      <!-- Central Execution Panel -->
+      <section class="workspace-body">
+        <!-- Running Progress Tracker -->
+        <div class="card progress-card hidden" id="progress-container">
+          <h2>Generation Status</h2>
+          
+          <div class="pipeline-timeline">
+            <!-- Transcribe Step -->
+            <div class="step-node" id="step-transcribe">
+              <div class="step-indicator">
+                <div class="ring"></div>
+                <div class="dot"></div>
+              </div>
+              <div class="step-details">
+                <h4>Audio Transcription</h4>
+                <p class="status-msg">Waiting for start...</p>
+                <div class="step-badge-row" id="transcribe-badges"></div>
+              </div>
+            </div>
+
+            <!-- Analyze Step -->
+            <div class="step-node" id="step-analyze">
+              <div class="step-indicator">
+                <div class="ring"></div>
+                <div class="dot"></div>
+              </div>
+              <div class="step-details">
+                <h4>Groq Vision Analysis</h4>
+                <p class="status-msg">Waiting...</p>
+                <div class="step-badge-row" id="analyze-badges"></div>
+              </div>
+            </div>
+
+            <!-- Plan Step -->
+            <div class="step-node" id="step-plan">
+              <div class="step-indicator">
+                <div class="ring"></div>
+                <div class="dot"></div>
+              </div>
+              <div class="step-details">
+                <h4>Annotation Planning</h4>
+                <p class="status-msg">Waiting...</p>
+                <div class="step-badge-row" id="plan-badges"></div>
+              </div>
+            </div>
+
+            <!-- Render Step -->
+            <div class="step-node" id="step-render">
+              <div class="step-indicator">
+                <div class="ring"></div>
+                <div class="dot"></div>
+              </div>
+              <div class="step-details">
+                <h4>Video Frame Rendering</h4>
+                <p class="status-msg">Waiting...</p>
+                <div class="progress-bar-wrapper hidden" id="render-progress-wrapper">
+                  <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="render-progress-fill"></div>
+                  </div>
+                  <span class="progress-percent" id="render-percent">0%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Compose Step -->
+            <div class="step-node" id="step-compose">
+              <div class="step-indicator">
+                <div class="ring"></div>
+                <div class="dot"></div>
+              </div>
+              <div class="step-details">
+                <h4>FFmpeg Composition</h4>
+                <p class="status-msg">Waiting...</p>
+                <div class="step-badge-row" id="compose-badges"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video Player Section -->
+        <div class="card video-card" id="video-container">
+          <h2>Output Preview</h2>
+          <div class="video-placeholder" id="video-placeholder">
+            <svg class="placeholder-icon" viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            <p>Select inputs and generate a video to preview here</p>
+          </div>
+          <div class="video-player-wrapper hidden" id="video-player-wrapper">
+            <video id="output-video" controls></video>
+            <div class="video-actions">
+              <a href="#" id="download-btn" class="secondary-btn" download>
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download Video
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal Console Logs -->
+        <div class="card terminal-card">
+          <div class="terminal-header">
+            <h3>Live Pipeline Logs</h3>
+            <button id="clear-terminal-btn" class="icon-btn" title="Clear console">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            </button>
+          </div>
+          <div class="terminal-console" id="console-logs">
+            <div class="log-line system">Console initialized. Ready to render.</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Details Inspector Sidebar (Right) -->
+    <section class="inspector">
+      <div class="inspector-header">
+        <h2>Details Inspector</h2>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="tab-transcript">Transcript</button>
+        <button class="tab-btn" data-tab="tab-vision">Vision Data</button>
+        <button class="tab-btn" data-tab="tab-plan">Annotation Plan</button>
+      </div>
+
+      <div class="tab-contents">
+        <!-- Transcript Tab -->
+        <div class="tab-panel active" id="tab-transcript">
+          <div class="tab-placeholder" id="transcript-placeholder">
+            <p>Transcribed text segments will appear here once audio analysis completes.</p>
+          </div>
+          <div class="transcript-list hidden" id="transcript-list"></div>
+        </div>
+
+        <!-- Vision Data Tab -->
+        <div class="tab-panel" id="tab-vision">
+          <div class="tab-placeholder" id="vision-placeholder">
+            <p>Image analysis results (subject, correct answer, coordinates) will appear here once vision process completes.</p>
+          </div>
+          <div class="vision-info hidden" id="vision-info">
+            <div class="info-group">
+              <label>Question Text</label>
+              <div id="inspector-question" class="info-val monospace"></div>
+            </div>
+            <div class="info-grid">
+              <div class="info-group">
+                <label>Subject</label>
+                <div id="inspector-subject" class="info-val capitalize"></div>
+              </div>
+              <div class="info-group">
+                <label>Topic</label>
+                <div id="inspector-topic" class="info-val capitalize"></div>
+              </div>
+            </div>
+            <div class="info-group">
+              <label>Correct Answer</label>
+              <div id="inspector-correct-answer" class="info-val answer-badge"></div>
+            </div>
+            <div class="info-group">
+              <label>Answer Choices Detection</label>
+              <div id="inspector-options" class="options-list"></div>
+            </div>
+            <div class="info-group">
+              <label>Working Area Bounds</label>
+              <div id="inspector-working-area" class="info-val monospace font-sm"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Annotation Plan Tab -->
+        <div class="tab-panel" id="tab-plan">
+          <div class="tab-placeholder" id="plan-placeholder">
+            <p>Planned annotations timeline will appear here once the LLM annotation planner completes.</p>
+          </div>
+          <div class="plan-timeline hidden" id="plan-list"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
