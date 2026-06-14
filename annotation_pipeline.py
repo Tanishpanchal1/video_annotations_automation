@@ -315,40 +315,43 @@ def plan_annotations(image_info: dict, transcript: dict) -> list:
     else:
         annotation_start_y = 130
         annotation_x = 220
-    annotation_x = max(annotation_x, 200)  # ensure at least 200px from left
+    annotation_x = max(annotation_x, 250)  # ensure at least 200px from left
 
     prompt = f"""You are an annotation planner for educational math videos.
 
 IMAGE LAYOUT:
 - Image size: {W}x{H}px
 - Question: "{image_info.get('question_text')}"
+- Answer options: {json.dumps(image_info.get('answer_options', []), indent=2)}
 - Correct answer: option {image_info.get('correct_answer')}
 - Answer options are on the LEFT side. The RIGHT side (x >= {annotation_x}) is EMPTY.
 - All write_text annotations must use x={annotation_x}.
 
+
 AUDIO TRANSCRIPT SEGMENTS:
 {json.dumps(transcript['segments'], indent=2)}
 
-TASK: Generate EXACTLY 7 write_text annotations for the solution steps in order.
+TASK: Generate EXACTLY 6 write_text annotations for the solution steps in order.
 
 CRITICAL RULES — FOLLOW EXACTLY:
 1. Every annotation must have a UNIQUE time_start. NO two annotations can share the same time.
-   Stagger them by at least 2 seconds apart.
-2. For the "define values" step: write ALL four on ONE line: "x₁=1  x₂=4  y₁=2  y₂=6"
-   Use font_scale: 0.65 (smaller font). This step must appear at ~29 seconds.
-3. For the substitution step: the text MUST start with √ (include the square root).
+   Stagger them by at least 2-3 seconds apart.
+2. For the substitution step: the text MUST start with √ (include the square root).
    Write: "√((4-1)² + (6-2)²)". This appears at ~30 seconds.
-4. Each subsequent step is a NEW annotation line below the previous one.
-5. Write ONLY math symbols/numbers — NO English words in the text field, except for the final answer which should include the word "units" (e.g. "d = 5 units").
+3. Each subsequent step is a NEW annotation line below the previous one.
+4. Write ONLY math symbols/numbers — NO English words in the text field, except for the final answer which should include the word "units" (e.g. "d = 5 units").
+
+
 
 REQUIRED ANNOTATION SEQUENCE (match to transcript segments):
-  Step 1 (~13.4s): "d = √((x₂ - x₁)² + (y₂ - y₁)²)"  font_scale: 1.25
-  Step 2 (~29.0s): "x₁ = 1  x₂ = 4  y₁ = 2  y₂ = 6"         font_scale: 1  (SMALLER)
-  Step 3 (~31.0s): "√((4 - 1)² + (6 - 2)²)"              font_scale: 1.25
-  Step 4 (~41.6s): "√(3² + 4²)"                      font_scale: 1.25
-  Step 5 (~44.6s): "√(9 + 16)"                        font_scale: 1.25
-  Step 6 (~48.0s): "√25"                               font_scale: 1.25
-  Step 7 (~59.3s): "d = 5 units"                         font_scale: 1.25
+  Step 1 (~13.4s): "d =  √ ((x₂ - x₁)² + (y₂ - y₁)²)"  font_scale: 1
+  Step 2 (~31.0s): "√((4 - 1)² + (6 - 2)²)"              font_scale: 1
+  Step 3 (~41.6s): "√(3² + 4²)"                      font_scale: 1
+  Step 4 (~44.6s): "√(9 + 16)"                        font_scale: 1
+  Step 5 (~48.0s): "√25"                               font_scale: 1
+  Step 6 (~59.3s): "d = 5 units"                         font_scale: 1
+
+
 
 Output ONLY a JSON array (no markdown, no explanation):
 [
@@ -360,19 +363,8 @@ Output ONLY a JSON array (no markdown, no explanation):
     "y": 0,
     "text": "d = √((x₂ - x₁)² + (y₂ - y₁)²)",
     "color": [0, 0, 0],
-    "font_scale": 0.9,
+    "font_scale": 0.7,
     "label": "write formula"
-  }},
-  {{
-    "time_start": 29.0,
-    "time_end": 31.0,
-    "type": "write_text",
-    "x": {annotation_x},
-    "y": 0,
-    "text": "x₁ = 1  x₂ = 4  y₁ = 2  y₂ = 6",
-    "color": [0, 0, 0],
-    "font_scale": 0.65,
-    "label": "define values"
   }},
   {{
     "time_start": 31.0,
@@ -382,9 +374,10 @@ Output ONLY a JSON array (no markdown, no explanation):
     "y": 0,
     "text": "√((4 - 1)² + (6 - 2)²)",
     "color": [0, 0, 0],
-    "font_scale": 0.9,
+    "font_scale": 0.7,
     "label": "substitute values"
   }},
+
   {{
     "time_start": 41.6,
     "time_end": 44.6,
@@ -393,7 +386,7 @@ Output ONLY a JSON array (no markdown, no explanation):
     "y": 0,
     "text": "√(3² + 4²)",
     "color": [0, 0, 0],
-    "font_scale": 0.9,
+    "font_scale": 0.7,
     "label": "calculate differences"
   }},
   {{
@@ -404,7 +397,7 @@ Output ONLY a JSON array (no markdown, no explanation):
     "y": 0,
     "text": "√(9 + 16)",
     "color": [0, 0, 0],
-    "font_scale": 0.9,
+    "font_scale": 0.7,
     "label": "calculate squares"
   }},
   {{
@@ -415,7 +408,7 @@ Output ONLY a JSON array (no markdown, no explanation):
     "y": 0,
     "text": "√25",
     "color": [0, 0, 0],
-    "font_scale": 0.9,
+    "font_scale": 0.7,
     "label": "sum under root"
   }},
   {{
@@ -426,7 +419,7 @@ Output ONLY a JSON array (no markdown, no explanation):
     "y": 0,
     "text": "d = 5 units",
     "color": [0, 0, 0],
-    "font_scale": 0.9,
+    "font_scale": 0.7,
     "label": "final answer"
   }}
 ]"""
@@ -507,23 +500,23 @@ Output ONLY a JSON array (no markdown, no explanation):
     else:
         base_y = 100
         base_x = 220
-    base_x = max(base_x, 200)
+    base_x = max(base_x, 250)
 
     # Count how many stacked lines we need
     stack_count = sum(1 for a in annotations if a.get('type') in ('write_text', 'underroot'))
     # Define gaps to visually separate annotation steps
-    gap_after_3rd = 12
-    gap_after_4th = 12
-    gap_after_5th = 12
+    gap_after_3rd = 15
+    gap_after_4th = 15
+    gap_after_5th = 15
     gap_before_result = 20
     total_gaps = gap_after_3rd + gap_after_4th + gap_after_5th + gap_before_result
     
     # Calculate spacing so all lines fit within the image height, subtracting the gaps
     available_h = H - base_y - 20 - total_gaps  # leave 20px bottom margin & account for gaps
     if stack_count > 1:
-        LINE_SPACING = min(56, max(30, available_h // stack_count))
+        LINE_SPACING = min(70, max(50, available_h // stack_count))
     else:
-        LINE_SPACING = 56
+        LINE_SPACING = 70
 
     write_index = 0
     processed = []
@@ -531,6 +524,8 @@ Output ONLY a JSON array (no markdown, no explanation):
         atype = ann.get('type', '')
         if atype in ('write_text', 'underroot'):
             ann['x'] = base_x
+
+
             extra_y = 0
             if write_index >= 3:
                 extra_y += gap_after_3rd
@@ -591,9 +586,27 @@ Output ONLY a JSON array (no markdown, no explanation):
             y1 = ry - padding_y
             y2 = ry + th + padding_y
         
+        # Schedule the highlighter to start slightly before the result text is fully drawn
+        highlighter_start = result_ann['time_start'] + 2.0
+        highlighter_end = highlighter_start + 3.0
+        
+        highlight_ann = {
+            "time_start": highlighter_start,
+            "time_end": highlighter_end,
+            "type": "highlight",
+            "x1": int(x1),
+            "y1": int(y1),
+            "x2": int(x2),
+            "y2": int(y2),
+            "color": [255, 255, 0],  # Yellow highlighter (RGB: [255, 255, 0] -> BGR: [0, 255, 255])
+            "label": "final answer highlight"
+        }
+        processed.append(highlight_ann)
+        
         # Schedule the box to start right after the text finishes drawing
         box_start = result_ann['time_start'] + 5.0
         box_end = box_start + 2.0
+
         
         box_ann = {
             "time_start": box_start,
@@ -608,7 +621,51 @@ Output ONLY a JSON array (no markdown, no explanation):
         }
         processed.append(box_ann)
 
+    # ── UNDERLINE POINTS A AND B IN THE QUESTION TEXT ──────────────
+    # From image analysis: question is near top, points A(1,2) and B(4,6)
+    # Use question_region to approximate positions of the point coordinates
+    q_region = image_info.get('question_region', {})
+    q_y2 = q_region.get('y2', 80)  # bottom of question text line
+    q_x1 = q_region.get('x1', 30)
+    # Approximate positions based on the question text layout
+    # "A (1, 2)" is roughly at 60-70% of question width
+    # "(4, 6)" is near the end of the question text
+    q_width = q_region.get('x2', W - 100) - q_x1
+    
+    # Underline "A (1, 2)" — appears early in the video
+    a_underline_x1 = q_x1 + int(q_width * 0.53)
+    a_underline_x2 = q_x1 + int(q_width * 0.72)
+    a_underline_y = q_y2 - 5
+    processed.append({
+        "time_start": 2.0,
+        "time_end": 10.0,
+        "type": "underline",
+        "x1": a_underline_x1,
+        "y1": a_underline_y,
+        "x2": a_underline_x2,
+        "y2": a_underline_y,
+        "color": [255, 0, 0],  # Red underline
+        "label": "underline point A"
+    })
+    
+    # Underline "(4, 6)" — the B point
+    b_underline_x1 = q_x1 + int(q_width * 0.78)
+    b_underline_x2 = q_x1 + int(q_width * 0.93)
+    b_underline_y = q_y2 - 5
+    processed.append({
+        "time_start": 3.0,
+        "time_end": 10.0,
+        "type": "underline",
+        "x1": b_underline_x1,
+        "y1": b_underline_y,
+        "x2": b_underline_x2,
+        "y2": b_underline_y,
+        "color": [255, 0, 0],  # Red underline
+        "label": "underline point B"
+    })
+
     return processed
+
 
  
  
@@ -697,8 +754,8 @@ def draw_annotation(img, ann, H, W, t=None):
             if sqrt_token in text:
                 idx = text.index(sqrt_token)
                 if idx > 0:
-                    prefix_text = text[:idx].rstrip()  # e.g. "d ="
-                    text = text[idx:]                  # e.g. "√((x2-x1)²...)"
+                    prefix_text = text[:idx].replace("=", " = ").rstrip()  # e.g. "d ="
+                    text = text[idx:].replace("=", " = ")                  # e.g. "√((x2-x1)²...)"
                 break
 
         # Draw the prefix ("d =") as plain text first
@@ -781,7 +838,7 @@ def draw_annotation(img, ann, H, W, t=None):
                 ry4 = y - 5
                 
                 pts = get_hand_line_pts(rx1, ry1, rx2, ry2) + get_hand_line_pts(rx2, ry2, rx3, ry3) + get_hand_line_pts(rx3, ry3, rx4, ry4)
-                img = draw_stroke(img, pts, c, 2, root_progress)
+                img = draw_stroke(img, pts, c, 1, root_progress)
 
     elif atype == "underline":
         x1, y1 = ann.get("x1", 0), ann.get("y1", 0)
